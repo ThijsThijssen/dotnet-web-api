@@ -1,0 +1,35 @@
+version: '3.4'
+
+networks: 
+    dockerapi-dev:
+        driver: bridge
+
+services: 
+    dockerapi:
+        image: aspnetapp:latest
+        depends_on: 
+            - "postgresql"
+        build:
+            context: .
+            dockerfile: Dockerfile
+        ports: 
+            - "8080:80"
+        environment: 
+            DB_CONNECTION_STRING: "host=postgresql;port=5432;database=tododb;username=todouser;password=todopassword"
+        networks: 
+            - dockerapi-dev
+    
+    postgresql:
+        image: postgres:latest
+        ports: 
+            - "5432"
+        restart: always
+        volumes: 
+            - ./db_volume:/var/lib/postgresql/data
+            - ./dbscripts/seed.sql:/docker-entrypoint-initdb.d/seed.sql
+        environment: 
+            POSTGRES_USER: "todouser"
+            POSTGRES_PASSWORD: "todopassword"
+            POSTGRES_DB: "tododb"
+        networks: 
+            - dockerapi-dev
